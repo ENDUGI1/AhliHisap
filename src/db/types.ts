@@ -64,3 +64,13 @@ export interface BadgeRecord {
   id: string; // badge key
   earned_at: number;
 }
+
+/** Qualitative day rating — for people who won't count every session. */
+export type CheckinLevel = "bersih" | "ringan" | "biasa" | "banyak";
+
+/** One per day (keyed by local day string). Overrides raw session count for momentum. */
+export interface Checkin {
+  day: string; // dayKey, e.g. "2026-06-27"
+  level: CheckinLevel;
+  timestamp: number;
+}

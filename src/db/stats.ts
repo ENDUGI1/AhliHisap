@@ -1,6 +1,7 @@
 /** Pure aggregation: raw logs -> dashboard numbers. No I/O, easy to reason about. */
-import type { Profile, SessionLog, BottleEvent } from "./types";
+import type { Profile, SessionLog, BottleEvent, Checkin, CheckinLevel } from "./types";
 import { dayKey, shortDay } from "@/lib/format";
+import { checkinSessions } from "@/lib/checkin";
 import {
   costPerSession,
   savedToday,
@@ -15,6 +16,7 @@ export interface TrendDay {
   label: string;
   count: number;
   isToday: boolean;
+  hasInput: boolean; // false = not logged (distinct from a recorded zero)
 }
 
 export interface DashboardStats {
@@ -28,6 +30,7 @@ export interface DashboardStats {
   daysLogged: number;
   belowBaselineDays: number;
   hasLoggedToday: boolean;
+  todayCheckin: CheckinLevel | null; // set => momentum came from a check-in, not taps
 }
 
 function countByDay(sessions: SessionLog[]): Map<string, number> {
@@ -42,12 +45,26 @@ function countByDay(sessions: SessionLog[]): Map<string, number> {
 export function computeDashboard(
   profile: Profile,
   sessions: SessionLog[],
+  checkins: Checkin[],
   now = Date.now(),
 ): DashboardStats {
-  const cps = costPerSession(profile.baseline_cost_day, profile.baseline_sessions_day);
-  const byDay = countByDay(sessions);
+  const baseline = profile.baseline_sessions_day;
+  const cps = costPerSession(profile.baseline_cost_day, baseline);
+  const rawByDay = countByDay(sessions);
+  const checkinByDay = new Map(checkins.map((c) => [c.day, c.level]));
   const todayKey = dayKey(now);
-  const sessionsToday = byDay.get(todayKey) ?? 0;
+
+  // a check-in overrides the raw tap count for that day's momentum
+  const effective = (k: string): number => {
+    const lvl = checkinByDay.get(k);
+    if (lvl) return checkinSessions(lvl, baseline);
+    return rawByDay.get(k) ?? 0;
+  };
+  const hasInput = (k: string): boolean =>
+    checkinByDay.has(k) || (rawByDay.get(k) ?? 0) > 0;
+
+  const daysWithInput = new Set<string>([...rawByDay.keys(), ...checkinByDay.keys()]);
+  const sessionsToday = effective(todayKey);
 
   // 7-day trend window
   const trend: TrendDay[] = [];
@@ -58,16 +75,17 @@ export function computeDashboard(
     trend.push({
       key: k,
       label: shortDay(ts),
-      count: byDay.get(k) ?? 0,
+      count: effective(k),
       isToday: k === todayKey,
+      hasInput: hasInput(k),
     });
   }
 
   // cumulative saved = positive contributions only (non-judgmental piggy bank)
   let totalSaved = 0;
   let belowBaselineDays = 0;
-  for (const [, count] of byDay) {
-    const s = savedToday(profile.baseline_sessions_day, count, cps);
+  for (const k of daysWithInput) {
+    const s = savedToday(baseline, effective(k), cps);
     if (s > 0) {
       totalSaved += s;
       belowBaselineDays++;
@@ -77,14 +95,15 @@ export function computeDashboard(
   return {
     sessionsToday,
     costPerSession: cps,
-    savedToday: savedToday(profile.baseline_sessions_day, sessionsToday, cps),
-    deltaPct: deltaPct(sessionsToday, profile.baseline_sessions_day),
-    belowBaseline: sessionsToday < profile.baseline_sessions_day,
+    savedToday: savedToday(baseline, sessionsToday, cps),
+    deltaPct: deltaPct(sessionsToday, baseline),
+    belowBaseline: sessionsToday < baseline,
     totalSaved,
     trend,
-    daysLogged: byDay.size,
+    daysLogged: daysWithInput.size,
     belowBaselineDays,
-    hasLoggedToday: sessionsToday > 0,
+    hasLoggedToday: hasInput(todayKey),
+    todayCheckin: checkinByDay.get(todayKey) ?? null,
   };
 }
 

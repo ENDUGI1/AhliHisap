@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { X } from "@phosphor-icons/react";
+import { X, PencilSimple } from "@phosphor-icons/react";
+import { useLiveQuery } from "dexie-react-hooks";
 import type { Profile } from "@/db/types";
-import { Segmented } from "@/components/ui";
-import { setMode, resetAll } from "@/db/repo";
+import { db } from "@/db/db";
+import { Segmented, Field, Button } from "@/components/ui";
+import { setMode, resetAll, updateBaselineManual } from "@/db/repo";
 import { rp, ml } from "@/lib/format";
 
-/** Light settings: switch reduce/quit mode anytime, review baseline, reset. */
+/** Light settings: switch mode, review & edit baseline, reset. */
 export function SettingsSheet({
   profile,
   open,
@@ -16,6 +19,7 @@ export function SettingsSheet({
   onClose: () => void;
 }) {
   const reduce = useReducedMotion();
+  const [editing, setEditing] = useState(false);
 
   return (
     <AnimatePresence>
@@ -63,23 +67,36 @@ export function SettingsSheet({
             </div>
 
             <div className="sheet__block">
-              <span className="field__label">Baseline sekarang</span>
-              <div className="sheet__stats">
-                <div>
-                  <span className="mono ink-aqua">{ml(profile.baseline_ml_day)}</span>
-                  <small>per hari</small>
-                </div>
-                <div>
-                  <span className="mono ink-amber">{rp(profile.baseline_cost_day)}</span>
-                  <small>per hari</small>
-                </div>
-                <div>
-                  <span className="mono">{profile.baseline_sessions_day}</span>
-                  <small>sesi/hari</small>
-                </div>
+              <div className="sheet__block-head">
+                <span className="field__label">Baseline sekarang</span>
+                <button className="sheet__edit" onClick={() => setEditing((v) => !v)}>
+                  <PencilSimple size={14} weight="bold" />
+                  {editing ? "Tutup" : "Ubah"}
+                </button>
               </div>
-              {profile.baseline_corrected_at && (
-                <p className="sheet__hint">Sudah dikoreksi dari data nyatamu.</p>
+
+              {!editing ? (
+                <>
+                  <div className="sheet__stats">
+                    <div>
+                      <span className="mono ink-aqua">{ml(profile.baseline_ml_day)}</span>
+                      <small>per hari</small>
+                    </div>
+                    <div>
+                      <span className="mono ink-amber">{rp(profile.baseline_cost_day)}</span>
+                      <small>per hari</small>
+                    </div>
+                    <div>
+                      <span className="mono">{profile.baseline_sessions_day}</span>
+                      <small>sesi/hari</small>
+                    </div>
+                  </div>
+                  {profile.baseline_corrected_at && (
+                    <p className="sheet__hint">Sudah dikoreksi dari data nyatamu.</p>
+                  )}
+                </>
+              ) : (
+                <BaselineEditor profile={profile} onSaved={() => setEditing(false)} />
               )}
             </div>
 
@@ -98,5 +115,81 @@ export function SettingsSheet({
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+function BaselineEditor({
+  profile,
+  onSaved,
+}: {
+  profile: Profile;
+  onSaved: () => void;
+}) {
+  const liquid = useLiveQuery(
+    () => db.products.where("type").equals("liquid").first(),
+    [],
+  );
+
+  const [sessions, setSessions] = useState(String(profile.baseline_sessions_day));
+  const [price, setPrice] = useState("");
+  const [mlSize, setMlSize] = useState("");
+  const [days, setDays] = useState("");
+  const [seeded, setSeeded] = useState(false);
+
+  // seed once when the liquid product loads
+  if (liquid && !seeded) {
+    setPrice(String(liquid.bottle_price ?? ""));
+    setMlSize(String(liquid.bottle_ml ?? ""));
+    setDays(String(liquid.days_per_bottle ?? ""));
+    setSeeded(true);
+  }
+
+  const valid =
+    Number(sessions) > 0 && Number(price) > 0 && Number(mlSize) > 0 && Number(days) > 0;
+
+  return (
+    <div className="sheet__editor">
+      <div className="ob__grid2">
+        <Field
+          label="Sesi / hari"
+          value={sessions}
+          onChange={(e) => setSessions(e.target.value.replace(/\D/g, ""))}
+        />
+        <Field
+          label="Hari / botol"
+          value={days}
+          onChange={(e) => setDays(e.target.value.replace(/\D/g, ""))}
+        />
+      </div>
+      <div className="ob__grid2">
+        <Field
+          label="Harga botol"
+          prefix="Rp"
+          value={price}
+          onChange={(e) => setPrice(e.target.value.replace(/\D/g, ""))}
+        />
+        <Field
+          label="Isi botol"
+          suffix="ml"
+          value={mlSize}
+          onChange={(e) => setMlSize(e.target.value.replace(/\D/g, ""))}
+        />
+      </div>
+      <Button
+        full
+        disabled={!valid}
+        onClick={async () => {
+          await updateBaselineManual({
+            sessions_day: Number(sessions),
+            bottle_price: Number(price),
+            bottle_ml: Number(mlSize),
+            days_per_bottle: Number(days),
+          });
+          onSaved();
+        }}
+      >
+        Simpan baseline
+      </Button>
+    </div>
   );
 }

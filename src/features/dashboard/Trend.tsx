@@ -10,7 +10,7 @@ export function Trend({
 }) {
   const peak = Math.max(baseline * 1.4, ...trend.map((d) => d.count), 1);
   const baselineTop = (1 - baseline / peak) * 100;
-  const hasAny = trend.some((d) => d.count > 0);
+  const hasAny = trend.some((d) => d.hasInput);
 
   return (
     <div className="trend">
@@ -26,13 +26,27 @@ export function Trend({
           return (
             <div key={d.key} className="trend__col">
               <div className="trend__bar-track">
-                <div
-                  className={`trend__bar ${over ? "is-over" : "is-under"} ${
-                    d.isToday ? "is-today" : ""
-                  }`}
-                  style={{ height: `${Math.max(h, d.count > 0 ? 6 : 0)}%` }}
-                  title={`${d.label}: ${d.count} sesi`}
-                />
+                {!d.hasInput ? (
+                  <span
+                    className="trend__nodata"
+                    title={`${d.label}: belum nyatat`}
+                    aria-label="belum nyatat"
+                  />
+                ) : d.count === 0 ? (
+                  <span
+                    className={`trend__clean ${d.isToday ? "is-today" : ""}`}
+                    title={`${d.label}: hari bersih`}
+                    aria-label="hari bersih"
+                  />
+                ) : (
+                  <div
+                    className={`trend__bar ${over ? "is-over" : "is-under"} ${
+                      d.isToday ? "is-today" : ""
+                    }`}
+                    style={{ height: `${Math.max(h, 6)}%` }}
+                    title={`${d.label}: ${d.count} sesi`}
+                  />
+                )}
               </div>
               <span className={`trend__label mono ${d.isToday ? "is-today" : ""}`}>
                 {d.label}

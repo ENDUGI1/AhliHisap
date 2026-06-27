@@ -14,8 +14,11 @@ export function useProfile(): Profile | null | undefined {
 export function useDashboard(profile: Profile | null | undefined) {
   return useLiveQuery(async () => {
     if (!profile) return undefined;
-    const sessions = await db.sessions.toArray();
-    return computeDashboard(profile, sessions);
+    const [sessions, checkins] = await Promise.all([
+      db.sessions.toArray(),
+      db.checkins.toArray(),
+    ]);
+    return computeDashboard(profile, sessions, checkins);
   }, [profile]);
 }
 

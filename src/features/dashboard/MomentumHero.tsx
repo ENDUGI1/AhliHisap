@@ -1,22 +1,28 @@
+import { motion, useReducedMotion } from "motion/react";
 import { LiquidLevel } from "@/components/LiquidLevel";
 import { pct } from "@/lib/format";
+import { checkinLabel } from "@/lib/checkin";
+import type { CheckinLevel } from "@/db/types";
 import type { DashboardStats } from "@/db/stats";
 
 /**
  * Hero = momentum, not money. Big number is sessions-today vs the usual line.
- * Aqua when below baseline (a win), gentle coral when above. Never harsh red.
+ * Aqua when at/below baseline (a win), gentle coral when above. Never harsh red.
  */
 export function MomentumHero({
   stats,
   baseline,
+  checkin,
 }: {
   stats: DashboardStats;
   baseline: number;
+  checkin: CheckinLevel | null;
 }) {
+  const reduce = useReducedMotion();
   const scale = Math.max(baseline * 1.6, stats.sessionsToday + 1, 1);
   const fill = stats.sessionsToday / scale;
   const markerBottom = (baseline / scale) * 100;
-  const tone = stats.belowBaseline ? "aqua" : stats.sessionsToday === baseline ? "aqua" : "coral";
+  const tone = stats.sessionsToday > baseline ? "coral" : "aqua";
 
   const deltaLabel = !stats.hasLoggedToday
     ? "belum nyatat"
@@ -31,11 +37,22 @@ export function MomentumHero({
           <span className="hero__marker-label mono">biasanya {baseline}</span>
         </div>
         <div className="hero__content">
-          <span className="hero__big mono">{stats.sessionsToday}</span>
-          <span className="hero__unit">sesi hari ini</span>
+          <motion.span
+            key={stats.sessionsToday}
+            className="hero__big mono"
+            initial={reduce ? false : { scale: 0.7, opacity: 0.4 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 320, damping: 22 }}
+          >
+            {stats.sessionsToday}
+          </motion.span>
+          <span className="hero__unit">
+            sesi hari ini
+            {checkin && <span className="hero__via"> · {checkinLabel(checkin)}</span>}
+          </span>
           <span
             className={`hero__delta mono ${
-              stats.belowBaseline ? "is-good" : stats.sessionsToday > baseline ? "is-warn" : ""
+              stats.belowBaseline ? "is-good" : stats.sessionsToday > baseline ? "is-warn" : "is-good"
             }`}
           >
             {deltaLabel}

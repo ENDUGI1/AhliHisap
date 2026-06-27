@@ -60,6 +60,15 @@
 }
 
 /* ---- hero ---- */
+.hero .liquid__overlay {
+  /* scrim anchored left/bottom so text stays legible over any liquid level */
+  background: radial-gradient(
+    130% 110% at 0% 60%,
+    rgba(7, 16, 17, 0.72),
+    rgba(7, 16, 17, 0.32) 55%,
+    transparent 86%
+  );
+}
 .hero__content {
   display: flex;
   flex-direction: column;
@@ -72,6 +81,11 @@
   font-weight: 800;
   line-height: 0.92;
   color: var(--text);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
+  transform-origin: left center;
+}
+.hero__via {
+  color: var(--aqua);
 }
 .hero__unit {
   color: var(--muted);
@@ -83,9 +97,9 @@
   font-size: var(--t-sm);
   padding: 5px 11px;
   border-radius: var(--radius-pill);
-  background: rgba(12, 23, 24, 0.45);
+  background: rgba(7, 16, 17, 0.62);
   color: var(--muted);
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(3px);
 }
 .hero__delta.is-good {
   color: var(--aqua);
@@ -123,6 +137,55 @@
   letter-spacing: -0.01em;
   color: var(--text);
   padding: 0 var(--s1);
+}
+
+/* ---- daily check-in ---- */
+.checkin {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--s4) var(--s5) var(--s5);
+}
+.checkin__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--muted);
+  font-size: var(--t-sm);
+  margin-bottom: var(--s3);
+}
+.checkin__title {
+  font-weight: 500;
+}
+.checkin__row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s2);
+}
+.checkin__opt {
+  min-height: 46px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--t-sm);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.checkin__opt:active {
+  transform: scale(0.96);
+}
+.checkin__opt.is-on {
+  background: var(--aqua-wash);
+  color: var(--aqua);
+  border-color: rgba(79, 214, 193, 0.45);
+}
+.checkin__opt--banyak.is-on {
+  background: var(--coral-wash);
+  color: var(--coral);
+  border-color: var(--coral-dim);
 }
 
 /* ---- cards row ---- */
@@ -236,6 +299,27 @@
 }
 .trend__bar.is-today.is-over {
   background: var(--coral);
+}
+/* not-logged: faint hollow ring at the baseline floor */
+.trend__nodata {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--muted-2);
+  opacity: 0.5;
+  margin-bottom: 2px;
+}
+/* recorded clean day (0 sesi): a solid aqua dot — a win, not "missing" */
+.trend__clean {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--aqua-dim);
+  box-shadow: 0 0 0 3px var(--aqua-wash);
+  margin-bottom: 2px;
+}
+.trend__clean.is-today {
+  background: var(--aqua);
 }
 .trend__label {
   font-size: var(--t-xs);
@@ -472,8 +556,11 @@
 .toast {
   position: fixed;
   bottom: calc(var(--bottombar-h) + var(--s4));
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: max-content;
+  max-width: calc(100% - var(--s8));
   z-index: 50;
   display: flex;
   align-items: center;
@@ -535,8 +622,9 @@
 }
 .sheet {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  margin-inline: auto;
   bottom: 0;
   z-index: 61;
   width: 100%;
@@ -575,6 +663,25 @@
   display: flex;
   flex-direction: column;
   gap: var(--s3);
+}
+.sheet__block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sheet__edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--aqua);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  padding: var(--s1) var(--s2);
+}
+.sheet__editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
 }
 .sheet__hint {
   font-size: var(--t-xs);

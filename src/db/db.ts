@@ -5,6 +5,7 @@ import type {
   SessionLog,
   BottleEvent,
   BadgeRecord,
+  Checkin,
 } from "./types";
 
 /**
@@ -17,6 +18,7 @@ class AhliHisapDB extends Dexie {
   sessions!: Table<SessionLog, string>;
   bottleEvents!: Table<BottleEvent, string>;
   badges!: Table<BadgeRecord, string>;
+  checkins!: Table<Checkin, string>;
 
   constructor() {
     super("ahlihisap");
@@ -26,6 +28,10 @@ class AhliHisapDB extends Dexie {
       sessions: "id, timestamp, product_id",
       bottleEvents: "id, timestamp, product_id",
       badges: "id, earned_at",
+    });
+    // v2: daily check-in — qualitative momentum input, one row per day
+    this.version(2).stores({
+      checkins: "day, timestamp",
     });
   }
 }

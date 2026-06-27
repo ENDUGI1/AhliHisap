@@ -1,5 +1,6 @@
 import { db, uid, PROFILE_ID } from "./db";
-import type { Mode, Profile, Product } from "./types";
+import type { CheckinLevel, Mode, Profile, Product } from "./types";
+import { dayKey } from "@/lib/format";
 import {
   baselineCostDay,
   baselineMlDay,
@@ -120,6 +121,53 @@ export async function setMode(mode: Mode): Promise<void> {
   await db.profile.update(PROFILE_ID, { mode });
 }
 
+/** Set today's qualitative check-in. Tapping the active level again clears it. */
+export async function setCheckin(level: CheckinLevel): Promise<void> {
+  const day = dayKey(Date.now());
+  const existing = await db.checkins.get(day);
+  if (existing && existing.level === level) {
+    await db.checkins.delete(day);
+    return;
+  }
+  await db.checkins.put({ day, level, timestamp: Date.now() });
+}
+
+/** Manual baseline edit from Settings — recomputes cost/ml from liquid + coil. */
+export async function updateBaselineManual(input: {
+  sessions_day: number;
+  bottle_price: number;
+  bottle_ml: number;
+  days_per_bottle: number;
+}): Promise<void> {
+  const profile = await db.profile.get(PROFILE_ID);
+  if (!profile) return;
+  const liquid = await getPrimaryLiquid();
+  const coilProd = await db.products.where("type").equals("coil").first();
+
+  const liquidInput = {
+    bottle_price: input.bottle_price,
+    bottle_ml: input.bottle_ml,
+    days_per_bottle: input.days_per_bottle,
+  };
+  const coilInput = coilProd
+    ? {
+        pack_price: coilProd.pack_price ?? 0,
+        units_per_pack: coilProd.units_per_pack ?? 0,
+        change_weeks: coilProd.change_weeks ?? 0,
+      }
+    : null;
+
+  await db.transaction("rw", db.products, db.profile, async () => {
+    if (liquid) await db.products.update(liquid.id, liquidInput);
+    await db.profile.update(PROFILE_ID, {
+      baseline_sessions_day: input.sessions_day,
+      baseline_cost_day: baselineCostDay(liquidInput, coilInput),
+      baseline_ml_day: baselineMlDay(liquidInput),
+      baseline_corrected_at: Date.now(),
+    });
+  });
+}
+
 export async function syncBadges(earnedIds: string[]): Promise<string[]> {
   const existing = new Set((await db.badges.toArray()).map((b) => b.id));
   const fresh = earnedIds.filter((id) => !existing.has(id));
@@ -133,7 +181,7 @@ export async function syncBadges(earnedIds: string[]): Promise<string[]> {
 export async function resetAll(): Promise<void> {
   await db.transaction(
     "rw",
-    [db.profile, db.products, db.sessions, db.bottleEvents, db.badges],
+    [db.profile, db.products, db.sessions, db.bottleEvents, db.badges, db.checkins],
     async () => {
       await Promise.all([
         db.profile.clear(),
@@ -141,6 +189,7 @@ export async function resetAll(): Promise<void> {
         db.sessions.clear(),
         db.bottleEvents.clear(),
         db.badges.clear(),
+        db.checkins.clear(),
       ]);
     },
   );

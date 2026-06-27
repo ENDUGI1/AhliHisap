@@ -13,12 +13,14 @@ import {
 import { evaluateBadges } from "@/lib/badges";
 import { coachLine } from "@/lib/coach";
 import { rp, ml } from "@/lib/format";
+import { buzz } from "@/lib/haptics";
 import { MomentumHero } from "./MomentumHero";
 import { Trend } from "./Trend";
 import { WhatIf } from "@/features/whatif/WhatIf";
 import { BadgesRow } from "./BadgesRow";
 import { SettingsSheet } from "./SettingsSheet";
 import { EmptyDayOne } from "./EmptyDayOne";
+import { DayCheckin } from "./DayCheckin";
 import "./Dashboard.css";
 
 export function Dashboard({ profile }: { profile: Profile }) {
@@ -53,10 +55,12 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const isFirstDay = stats.daysLogged === 0 && !stats.hasLoggedToday;
 
   async function onLog() {
+    buzz();
     await logSession();
     flash("Tercatat · 1 sesi");
   }
   async function onBottle() {
+    buzz(18);
     await logBottleEvent();
     flash("Botol baru tercatat");
   }
@@ -97,7 +101,11 @@ export function Dashboard({ profile }: { profile: Profile }) {
         />
       )}
 
-      <MomentumHero stats={stats} baseline={profile.baseline_sessions_day} />
+      <MomentumHero
+        stats={stats}
+        baseline={profile.baseline_sessions_day}
+        checkin={stats.todayCheckin}
+      />
 
       <p className="dash__coach">
         {coachLine({
@@ -107,6 +115,8 @@ export function Dashboard({ profile }: { profile: Profile }) {
           isFirstDay,
         })}
       </p>
+
+      <DayCheckin active={stats.todayCheckin} />
 
       {isFirstDay ? (
         <EmptyDayOne
