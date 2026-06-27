@@ -1,0 +1,14 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AhliHisap">
+  <defs>
+    <clipPath id="t"><rect x="6" y="6" width="52" height="52" rx="15" /></clipPath>
+    <linearGradient id="l" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4FD6C1" />
+      <stop offset="1" stop-color="#2FA894" />
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="52" height="52" rx="15" fill="#0C1718" />
+  <g clip-path="url(#t)">
+    <path d="M6 40 C 19 36, 28 44, 38 40 C 47 36, 53 41, 58 40 L 58 58 L 6 58 Z" fill="url(#l)" />
+  </g>
+  <circle cx="41" cy="23" r="6" fill="#F2A93C" />
+</svg>

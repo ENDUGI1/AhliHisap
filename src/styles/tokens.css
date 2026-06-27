@@ -1,0 +1,79 @@
+/* ============================================================
+   AhliHisap — Design tokens (locked, from approved prototype)
+   Petrol dark + two meaningful accents:
+     amber = uang (hangat)   ·   aqua = liquid/health (dingin)
+   ============================================================ */
+:root {
+  /* --- surfaces & ink --- */
+  --ink: #0c1718;
+  --surface: #132426;
+  --surface-2: #193235;
+  --line: #234245;
+
+  /* --- text --- */
+  --text: #e9f2f0;
+  --muted: #7fa09d;
+  --muted-2: #5a7a77;
+
+  /* --- accents (each carries a single meaning) --- */
+  --amber: #f2a93c; /* money */
+  --amber-dim: #c4811f;
+  --aqua: #4fd6c1; /* liquid / health / "below baseline" win */
+  --aqua-dim: #2fa894;
+  --coral: #e8917e; /* gentle warning — never harsh red */
+  --coral-dim: #c46d59;
+
+  /* tinted accent washes (for soft fills, hue-matched to bg) */
+  --amber-wash: rgba(242, 169, 60, 0.12);
+  --aqua-wash: rgba(79, 214, 193, 0.12);
+  --coral-wash: rgba(232, 145, 126, 0.13);
+
+  /* --- shape --- */
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-lg: 26px;
+  --radius-pill: 999px;
+
+  /* --- motion --- */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur-fast: 140ms;
+  --dur: 240ms;
+  --dur-slow: 520ms;
+
+  /* --- spacing scale (4pt rhythm) --- */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 20px;
+  --s6: 24px;
+  --s8: 32px;
+  --s10: 40px;
+  --s12: 48px;
+  --s16: 64px;
+
+  /* --- type --- */
+  --font-display: "Hanken Grotesk Variable", "Hanken Grotesk", system-ui, sans-serif;
+  --font-body: "Inter Variable", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+
+  /* type scale */
+  --t-display: clamp(2.4rem, 9vw, 3.4rem);
+  --t-h1: clamp(1.7rem, 6vw, 2.1rem);
+  --t-h2: 1.3rem;
+  --t-h3: 1.05rem;
+  --t-body: 1rem;
+  --t-sm: 0.875rem;
+  --t-xs: 0.75rem;
+
+  /* shadow — tinted to background hue, never pure black */
+  --shadow-card: 0 1px 0 rgba(233, 242, 240, 0.03) inset,
+    0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  --shadow-pop: 0 18px 50px -18px rgba(0, 0, 0, 0.72);
+
+  /* layout */
+  --app-max: 460px;
+  --bottombar-h: 86px;
+
+  color-scheme: dark;
+}

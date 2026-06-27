@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AhliHisap">
+  <defs>
+    <clipPath id="full">
+      <rect x="0" y="0" width="512" height="512" />
+    </clipPath>
+    <linearGradient id="liquidm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4FD6C1" />
+      <stop offset="1" stop-color="#2FA894" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#0C1718" />
+  <g clip-path="url(#full)">
+    <path d="M0 330 C 110 300, 200 360, 300 326 C 390 296, 450 340, 512 330 L 512 512 L 0 512 Z" fill="url(#liquidm)" />
+  </g>
+  <circle cx="330" cy="190" r="46" fill="#F2A93C" />
+</svg>
