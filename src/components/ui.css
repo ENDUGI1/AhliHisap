@@ -116,6 +116,12 @@
 }
 .field__box:focus-within {
   border-color: var(--aqua);
+  box-shadow: 0 0 0 3px var(--aqua-wash);
+}
+/* the box already signals focus; drop the input's own inner outline to avoid a double ring */
+.field__input:focus,
+.field__input:focus-visible {
+  outline: none;
 }
 .field__affix {
   color: var(--muted-2);
