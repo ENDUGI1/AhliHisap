@@ -1,25 +1,70 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { X, PencilSimple } from "@phosphor-icons/react";
+import {
+  X,
+  PencilSimple,
+  DownloadSimple,
+  UploadSimple,
+  DeviceMobile,
+} from "@phosphor-icons/react";
 import { useLiveQuery } from "dexie-react-hooks";
 import type { Profile } from "@/db/types";
 import { db } from "@/db/db";
 import { Segmented, Field, Button } from "@/components/ui";
-import { setMode, resetAll, updateBaselineManual } from "@/db/repo";
+import {
+  setMode,
+  resetAll,
+  updateBaselineManual,
+  exportAll,
+  importAll,
+} from "@/db/repo";
 import { rp, ml } from "@/lib/format";
 
-/** Light settings: switch mode, review & edit baseline, reset. */
+/** Light settings: install, mode, edit baseline, backup/restore, reset. */
 export function SettingsSheet({
   profile,
   open,
   onClose,
+  canInstall,
+  onInstall,
 }: {
   profile: Profile;
   open: boolean;
   onClose: () => void;
+  canInstall: boolean;
+  onInstall: () => void;
 }) {
   const reduce = useReducedMotion();
   const [editing, setEditing] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function doExport() {
+    const bundle = await exportAll();
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ahlihisap-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const bundle = JSON.parse(await file.text());
+      if (confirm("Ganti semua data sekarang dengan isi file cadangan?")) {
+        await importAll(bundle);
+        location.reload();
+      }
+    } catch (err) {
+      alert("Gagal memulihkan: " + (err as Error).message);
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -48,6 +93,13 @@ export function SettingsSheet({
                 <X size={20} />
               </button>
             </div>
+
+            {canInstall && (
+              <button className="sheet__install" onClick={onInstall}>
+                <DeviceMobile size={20} weight="fill" />
+                Pasang ke layar utama
+              </button>
+            )}
 
             <div className="sheet__block">
               <span className="field__label">Mode</span>
@@ -98,6 +150,34 @@ export function SettingsSheet({
               ) : (
                 <BaselineEditor profile={profile} onSaved={() => setEditing(false)} />
               )}
+            </div>
+
+            <div className="sheet__block">
+              <span className="field__label">Cadangan data</span>
+              <p className="sheet__hint">
+                Datamu cuma tersimpan di HP ini. Simpan cadangan sebelum ganti HP
+                atau bersih-bersih browser.
+              </p>
+              <div className="sheet__data-row">
+                <button className="sheet__data-btn" onClick={doExport}>
+                  <DownloadSimple size={18} weight="bold" />
+                  Cadangkan
+                </button>
+                <button
+                  className="sheet__data-btn"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <UploadSimple size={18} weight="bold" />
+                  Pulihkan
+                </button>
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="application/json,.json"
+                onChange={onPickFile}
+                hidden
+              />
             </div>
 
             <button

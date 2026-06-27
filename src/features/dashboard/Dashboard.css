@@ -22,6 +22,28 @@
   font-size: 1.7rem;
   letter-spacing: -0.03em;
 }
+.dash__top-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+.dash__install {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 44px;
+  padding: 0 var(--s4);
+  border-radius: var(--radius-pill);
+  background: var(--aqua-wash);
+  border: 1px solid rgba(79, 214, 193, 0.4);
+  color: var(--aqua);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--t-sm);
+}
+.dash__install:active {
+  transform: scale(0.97);
+}
 .dash__gear {
   display: grid;
   place-items: center;
@@ -708,6 +730,44 @@
 .sheet__stats small {
   font-size: var(--t-xs);
   color: var(--muted-2);
+}
+.sheet__install {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  min-height: 50px;
+  border-radius: var(--radius-pill);
+  background: var(--aqua);
+  color: #062420;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+.sheet__install:active {
+  transform: scale(0.98);
+}
+.sheet__data-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s3);
+}
+.sheet__data-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  min-height: 48px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--t-sm);
+}
+.sheet__data-btn:active {
+  transform: scale(0.97);
 }
 .sheet__danger {
   color: var(--coral);

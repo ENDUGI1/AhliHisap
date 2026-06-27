@@ -177,6 +177,69 @@ export async function syncBadges(earnedIds: string[]): Promise<string[]> {
   return fresh;
 }
 
+export interface ExportBundle {
+  app: "ahlihisap";
+  version: 2;
+  exported_at: number;
+  profile: unknown;
+  products: unknown[];
+  sessions: unknown[];
+  bottleEvents: unknown[];
+  badges: unknown[];
+  checkins: unknown[];
+}
+
+/** Snapshot every table — the local-first backup. */
+export async function exportAll(): Promise<ExportBundle> {
+  const [profile, products, sessions, bottleEvents, badges, checkins] =
+    await Promise.all([
+      db.profile.get(PROFILE_ID),
+      db.products.toArray(),
+      db.sessions.toArray(),
+      db.bottleEvents.toArray(),
+      db.badges.toArray(),
+      db.checkins.toArray(),
+    ]);
+  return {
+    app: "ahlihisap",
+    version: 2,
+    exported_at: Date.now(),
+    profile: profile ?? null,
+    products,
+    sessions,
+    bottleEvents,
+    badges,
+    checkins,
+  };
+}
+
+/** Restore from a backup bundle. Replaces all current data. */
+export async function importAll(bundle: ExportBundle): Promise<void> {
+  if (!bundle || bundle.app !== "ahlihisap" || !bundle.profile) {
+    throw new Error("File cadangan tidak dikenali.");
+  }
+  await db.transaction(
+    "rw",
+    [db.profile, db.products, db.sessions, db.bottleEvents, db.badges, db.checkins],
+    async () => {
+      await Promise.all([
+        db.profile.clear(),
+        db.products.clear(),
+        db.sessions.clear(),
+        db.bottleEvents.clear(),
+        db.badges.clear(),
+        db.checkins.clear(),
+      ]);
+      await db.profile.put(bundle.profile as never);
+      await db.products.bulkPut((bundle.products ?? []) as never[]);
+      await db.sessions.bulkPut((bundle.sessions ?? []) as never[]);
+      await db.bottleEvents.bulkPut((bundle.bottleEvents ?? []) as never[]);
+      await db.badges.bulkPut((bundle.badges ?? []) as never[]);
+      await db.checkins.bulkPut((bundle.checkins ?? []) as never[]);
+    },
+  );
+}
+
 /** Wipe everything (for the "mulai ulang" escape hatch). */
 export async function resetAll(): Promise<void> {
   await db.transaction(

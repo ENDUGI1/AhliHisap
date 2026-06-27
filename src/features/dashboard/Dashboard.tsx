@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Plus, Flask, ArrowCounterClockwise, Gear, Coins } from "@phosphor-icons/react";
+import {
+  Plus,
+  Flask,
+  ArrowCounterClockwise,
+  Gear,
+  Coins,
+  DownloadSimple,
+} from "@phosphor-icons/react";
 import type { Profile } from "@/db/types";
 import { useDashboard, useBaselineSuggestion, useEarnedBadges } from "@/hooks/useData";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import {
   logSession,
   undoLastSession,
@@ -28,6 +36,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const stats = useDashboard(profile);
   const suggestion = useBaselineSuggestion(profile);
   const earned = useEarnedBadges();
+  const { canInstall, promptInstall } = useInstallPrompt();
   const [toast, setToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -81,13 +90,21 @@ export function Dashboard({ profile }: { profile: Profile }) {
             Ahli<span className="ink-aqua">Hisap</span>
           </h1>
         </div>
-        <button
-          className="dash__gear"
-          onClick={() => setSettingsOpen(true)}
-          aria-label="Pengaturan"
-        >
-          <Gear size={22} />
-        </button>
+        <div className="dash__top-actions">
+          {canInstall && (
+            <button className="dash__install" onClick={promptInstall}>
+              <DownloadSimple size={16} weight="bold" />
+              Pasang
+            </button>
+          )}
+          <button
+            className="dash__gear"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Pengaturan"
+          >
+            <Gear size={22} />
+          </button>
+        </div>
       </header>
 
       {suggestion?.ready && (
@@ -191,6 +208,8 @@ export function Dashboard({ profile }: { profile: Profile }) {
         profile={profile}
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+        canInstall={canInstall}
+        onInstall={promptInstall}
       />
     </div>
   );
