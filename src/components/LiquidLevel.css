@@ -1,0 +1,69 @@
+.liquid {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: linear-gradient(180deg, #0e1e20, #0b1617);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+}
+
+.liquid__body {
+  position: absolute;
+  inset: auto 0 0 0;
+  transition: height var(--dur-slow) var(--ease);
+  will-change: height;
+}
+
+.liquid__fill {
+  position: absolute;
+  inset: 18px 0 0 0; /* below the wave crest */
+}
+
+.liquid__wave {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 200%;
+  height: 26px;
+  display: block;
+}
+
+.liquid__crest {
+  animation: liquid-pan 4.2s linear infinite;
+}
+.liquid__crest--back {
+  animation: liquid-pan 6.8s linear infinite reverse;
+}
+
+.liquid--calm .liquid__crest {
+  animation-duration: 8s;
+}
+.liquid--calm .liquid__crest--back {
+  animation-duration: 11s;
+}
+
+@keyframes liquid-pan {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.liquid__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--s5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid__crest,
+  .liquid__crest--back {
+    animation: none;
+  }
+}
