@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   Plus,
@@ -15,6 +15,7 @@ import {
   logSession,
   undoLastSession,
   logBottleEvent,
+  undoLastBottleEvent,
   correctBaseline,
   syncBadges,
 } from "@/db/repo";
@@ -37,7 +38,10 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const suggestion = useBaselineSuggestion(profile);
   const earned = useEarnedBadges();
   const { canInstall, promptInstall } = useInstallPrompt();
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; undo?: () => Promise<void> } | null>(
+    null,
+  );
+  const toastTimer = useRef<number | undefined>(undefined);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   // keep badges in sync with momentum (silent)
@@ -66,17 +70,17 @@ export function Dashboard({ profile }: { profile: Profile }) {
   async function onLog() {
     buzz();
     await logSession();
-    flash("Tercatat · 1 sesi");
+    flash("Tercatat · 1 sesi", undoLastSession);
   }
   async function onBottle() {
     buzz(18);
     await logBottleEvent();
-    flash("Botol baru tercatat");
+    flash("Botol baru tercatat", undoLastBottleEvent);
   }
-  function flash(msg: string) {
-    setToast(msg);
-    window.clearTimeout((flash as { t?: number }).t);
-    (flash as { t?: number }).t = window.setTimeout(() => setToast(null), 3200);
+  function flash(msg: string, undo?: () => Promise<void>) {
+    setToast({ msg, undo });
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 3200);
   }
 
   const greeting = greetByHour();
@@ -190,16 +194,19 @@ export function Dashboard({ profile }: { profile: Profile }) {
             transition={{ duration: 0.26, ease: [0.22, 0.61, 0.36, 1] }}
             role="status"
           >
-            <span>{toast}</span>
-            <button
-              className="toast__undo"
-              onClick={async () => {
-                await undoLastSession();
-                setToast(null);
-              }}
-            >
-              <ArrowCounterClockwise size={15} weight="bold" /> Urungkan
-            </button>
+            <span>{toast.msg}</span>
+            {toast.undo && (
+              <button
+                className="toast__undo"
+                onClick={async () => {
+                  const fn = toast.undo;
+                  setToast(null);
+                  await fn?.();
+                }}
+              >
+                <ArrowCounterClockwise size={15} weight="bold" /> Urungkan
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

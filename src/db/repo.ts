@@ -103,6 +103,12 @@ export async function logBottleEvent(): Promise<void> {
   });
 }
 
+/** Undo the most recent bottle event (gentle correction for mis-taps). */
+export async function undoLastBottleEvent(): Promise<void> {
+  const last = await db.bottleEvents.orderBy("timestamp").last();
+  if (last) await db.bottleEvents.delete(last.id);
+}
+
 /** Apply the 7-day baseline correction the user accepted. */
 export async function correctBaseline(
   actualCostDay: number,
