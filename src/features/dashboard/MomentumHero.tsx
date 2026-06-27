@@ -24,6 +24,9 @@ export function MomentumHero({
   const markerBottom = (baseline / scale) * 100;
   const tone = stats.sessionsToday > baseline ? "coral" : "aqua";
 
+  // "breath reward": a calm pulse behind the number, only on a real reduction win
+  const winning = stats.hasLoggedToday && stats.sessionsToday < baseline;
+
   const deltaLabel = !stats.hasLoggedToday
     ? "belum nyatat"
     : stats.sessionsToday === baseline
@@ -33,6 +36,23 @@ export function MomentumHero({
   return (
     <section className="hero" aria-label="Momentum hari ini">
       <LiquidLevel level={fill} height={232} tone={tone} calm>
+        {winning && (
+          <motion.span
+            className="hero__breath"
+            aria-hidden
+            initial={false}
+            animate={
+              reduce
+                ? { opacity: 0.5, scale: 1 }
+                : { opacity: [0.35, 0.7, 0.35], scale: [1, 1.14, 1] }
+            }
+            transition={
+              reduce
+                ? undefined
+                : { duration: 4.6, ease: "easeInOut", repeat: Infinity }
+            }
+          />
+        )}
         <div className="hero__marker" style={{ bottom: `${markerBottom}%` }}>
           <span className="hero__marker-label mono">biasanya {baseline}</span>
         </div>
